@@ -1,0 +1,456 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Vue Todo | Список дел</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f4fa 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .todo-app {
+            max-width: 650px;
+            width: 100%;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.08);
+            padding: 1.8rem 2rem 2rem;
+            transition: all 0.2s ease;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1F2B3C, #2c3e50);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.75rem;
+            border-left: 5px solid #3b82f6;
+            padding-left: 1rem;
+        }
+
+            h1:before {
+                content: "✓";
+                font-size: 1.9rem;
+                background: none;
+                background-clip: unset;
+                -webkit-background-clip: unset;
+                color: #3b82f6;
+            }
+
+        .add-task {
+            display: flex;
+            gap: 0.7rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+            .add-task input {
+                flex: 1;
+                padding: 0.9rem 1.2rem;
+                border: 2px solid #e2e8f0;
+                border-radius: 2rem;
+                font-size: 1rem;
+                outline: none;
+                transition: 0.2s;
+                background: white;
+            }
+
+                .add-task input:focus {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+                }
+
+            .add-task button {
+                background: #3b82f6;
+                border: none;
+                padding: 0 1.6rem;
+                border-radius: 2.5rem;
+                font-weight: 600;
+                font-size: 1rem;
+                color: white;
+                cursor: pointer;
+                transition: 0.2s;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            }
+
+                .add-task button:hover {
+                    background: #2563eb;
+                    transform: scale(0.97);
+                }
+
+        .filters-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eef2f6;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.6rem;
+            background: #f1f5f9;
+            padding: 0.3rem;
+            border-radius: 3rem;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #334155;
+        }
+
+            .filter-btn.active {
+                background: white;
+                color: #1e293b;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+                font-weight: 600;
+            }
+
+        .remaining-count {
+            font-size: 0.85rem;
+            background: #eef2ff;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            color: #1e40af;
+            font-weight: 500;
+        }
+
+        .task-list {
+            list-style: none;
+            margin: 1.2rem 0 1.5rem;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+            .task-list li {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: #fefefe;
+                margin-bottom: 0.7rem;
+                padding: 0.8rem 1rem;
+                border-radius: 1.2rem;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+                border: 1px solid #edf2f7;
+                transition: 0.15s;
+            }
+
+                .task-list li:hover {
+                    background: #fafcff;
+                    border-color: #cbd5e1;
+                }
+
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .task-check {
+            width: 1.3rem;
+            height: 1.3rem;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .task-text {
+            font-size: 1rem;
+            word-break: break-word;
+            transition: 0.1s;
+            color: #0f172a;
+        }
+
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+            .delete-btn:hover {
+                background: #fee2e2;
+                color: #ef4444;
+            }
+
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .clear-completed {
+            background: #f1f3f7;
+            border: none;
+            padding: 0.55rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #475569;
+            transition: 0.2s;
+        }
+
+            .clear-completed:hover {
+                background: #e6e9f0;
+                color: #dc2626;
+            }
+
+        .empty-msg {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6c757d;
+            font-style: italic;
+            background: #f8fafc;
+            border-radius: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #eef2f6;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #b9c3cf;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .todo-app {
+                padding: 1.3rem;
+            }
+
+            .filter-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="todo-app">
+            <h1>Мои задачи</h1>
+
+            <div class="add-task">
+                <input type="text"
+                       v-model="newTaskText"
+                       @keyup.enter="addTask"
+                       placeholder="Написать заметку... например, 'Купить продукты'" />
+                <button @click="addTask">➕ Добавить</button>
+            </div>
+
+            <div class="filters-panel">
+                <div class="filter-buttons">
+                    <button v-for="filter in filters"
+                            :key="filter.value"
+                            @click="currentFilter = filter.value"
+                            :class="{ active: currentFilter === filter.value }"
+                            class="filter-btn">
+                        {{ filter.label }}
+                    </button>
+                </div>
+                <div class="remaining-count" v-if="totalUncompleted !== undefined">
+                    📋 Осталось: {{ totalUncompleted }}
+                </div>
+            </div>
+
+            <ul class="task-list" v-if="filteredTasks.length">
+                <li v-for="task in filteredTasks" :key="task.id" :class="{ completed: task.completed }">
+                    <div class="task-info" @click="toggleComplete(task.id)">
+                        <input type="checkbox"
+                               class="task-check"
+                               :checked="task.completed"
+                               @click.stop
+                               @change="toggleComplete(task.id)" />
+                        <span class="task-text">{{ task.text }}</span>
+                    </div>
+                    <button class="delete-btn" @click="deleteTask(task.id)" title="Удалить задачу">✕</button>
+                </li>
+            </ul>
+            <div v-else class="empty-msg">
+                ✨ Здесь пока пусто... Добавьте первую задачу!
+            </div>
+
+            <div class="footer-actions" v-if="tasks.length">
+                <button class="clear-completed" @click="clearCompleted" :disabled="!hasCompletedTasks">
+                    🧹 Очистить выполненные
+                </button>
+                <div class="remaining-count secondary">
+                    ✅ Всего: {{ tasks.length }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                const tasks = ref([]);
+                const newTaskText = ref('');
+                const currentFilter = ref('all');
+
+                const filters = [
+                    { label: 'Все', value: 'all' },
+                    { label: 'Активные', value: 'active' },
+                    { label: 'Завершённые', value: 'completed' }
+                ];
+
+                const totalUncompleted = computed(() => {
+                    return tasks.value.filter(t => !t.completed).length;
+                });
+
+                const hasCompletedTasks = computed(() => {
+                    return tasks.value.some(t => t.completed);
+                });
+
+                const filteredTasks = computed(() => {
+                    if (currentFilter.value === 'active') {
+                        return tasks.value.filter(t => !t.completed);
+                    } else if (currentFilter.value === 'completed') {
+                        return tasks.value.filter(t => t.completed);
+                    }
+                    return tasks.value;
+                });
+
+                const STORAGE_KEY = 'vue_todo_app_data';
+
+                const loadTasks = () => {
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        try {
+                            const parsed = JSON.parse(stored);
+                            if (Array.isArray(parsed)) {
+                                tasks.value = parsed;
+                            } else {
+                                tasks.value = [];
+                            }
+                        } catch (e) {
+                            tasks.value = [];
+                        }
+                    } else {
+                        tasks.value = [
+                            { id: Date.now() + 1, text: 'Изучить Vue.js', completed: false },
+                            { id: Date.now() + 2, text: 'Создать простое приложение', completed: true },
+                            { id: Date.now() + 3, text: 'Поделиться с друзьями', completed: false }
+                        ];
+                    }
+                };
+
+                const saveTasks = () => {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks.value));
+                };
+
+                const addTask = () => {
+                    const text = newTaskText.value.trim();
+                    if (text === '') return;
+                    const newTask = {
+                        id: Date.now(),
+                        text: text,
+                        completed: false,
+                    };
+                    tasks.value.push(newTask);
+                    newTaskText.value = '';
+                    saveTasks();
+                };
+
+                const deleteTask = (id) => {
+                    tasks.value = tasks.value.filter(task => task.id !== id);
+                    saveTasks();
+                };
+
+                const toggleComplete = (id) => {
+                    const task = tasks.value.find(t => t.id === id);
+                    if (task) {
+                        task.completed = !task.completed;
+                        saveTasks();
+                    }
+                };
+
+                const clearCompleted = () => {
+                    tasks.value = tasks.value.filter(task => !task.completed);
+                    saveTasks();
+                };
+
+                onMounted(() => {
+                    loadTasks();
+                });
+
+                watch(tasks, () => {
+                    saveTasks();
+                }, { deep: true });
+
+                return {
+                    tasks,
+                    newTaskText,
+                    currentFilter,
+                    filters,
+                    totalUncompleted,
+                    hasCompletedTasks,
+                    filteredTasks,
+                    addTask,
+                    deleteTask,
+                    toggleComplete,
+                    clearCompleted,
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
